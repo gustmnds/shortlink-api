@@ -1,0 +1,51 @@
+name: Testing API
+
+on:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/api'
+      JWT_SECRET: 'b09860907a653b49b64dab07db779735f7d7198b36c9e32b9bbd242f4b135c40'
+      PASSWORD_SALT: '$2a$10$Nz.sAV4nsZ3q8XlY3fOIY.'
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install packages
+        run: yarn install
+
+      - name: Run Typescript Checks
+        run: yarn lint
+
+      - name: Apply prisma migrations
+        run: yarn prisma migrate deploy
+
+      - name: Run Tests
+        run: yarn test
