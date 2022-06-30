@@ -51,7 +51,9 @@ jobs:
         run: yarn test
 
       - name: Compile typescript
-        run: yarn tsc
+        run: |
+          yarn tsc
+          rm -rf src
 
       - name: Deploy branch
         uses: s0/git-publish-subdir-action@develop
